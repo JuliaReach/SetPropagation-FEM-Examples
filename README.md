@@ -7,8 +7,8 @@
 ### Authors
 
 - Marcelo Forets ([@mforets](http://github.com/mforets)) -- Departamento de Matemática y Aplicaciones, Centro Universitario Regional del Este, Universidad de la República, Maldonado, Uruguay.
-- Daniel Freire Caporale ([@dfcaporale](http://github.com/dfcaporale) -- Instituto de Fı́sica, Facultad de Ciencias, Universidad de la República, Montevideo, Uruguay.
-- Jorge M. Pérez Zerpa ([@jorgepz](http://github.com/jorgepz) -- Instituto de Estructuras y Transporte, Facultad de Ingenierı́a, Universidad de la República, Montevideo, Uruguay.
+- Daniel Freire Caporale ([@dfcaporale](http://github.com/dfcaporale)) -- Instituto de Fı́sica, Facultad de Ciencias, Universidad de la República, Montevideo, Uruguay.
+- Jorge M. Pérez Zerpa ([@jorgepz](http://github.com/jorgepz)) -- Instituto de Estructuras y Transporte, Facultad de Ingenierı́a, Universidad de la República, Montevideo, Uruguay.
 
 ### Abstract
 
