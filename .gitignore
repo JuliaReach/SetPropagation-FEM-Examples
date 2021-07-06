@@ -26,3 +26,4 @@ Manifest.toml
 
 # ONSAS.m repo files
 ONSAS/
+examples/InclusionWave/ONSAS_call/output/
