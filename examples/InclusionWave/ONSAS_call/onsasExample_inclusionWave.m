@@ -5,14 +5,15 @@
 
 clear all, close all
 
-%addpath( genpath( '../../../ONSAS' ) )
-addpath( genpath( '~/work/codigos/onsas/ONSAS.m_repo' ) )
+addpath( genpath( '../../../ONSAS' ) )
+% addpath( genpath( '~/work/codigos/onsas/ONSAS.m_repo' ) )
 
 % scalar parameters
 E = 1e3 ; nu = 0.25 ; p = 1.0 ; thickness = 1 ;
 
 materials.hyperElasModel  = {'linearElastic'; 'linearElastic'} ;
 materials.hyperElasParams = { [ E nu ]; [ E nu ] }      ;
+materials.density         = { 1.0 ; 1.0 }      ;
 
 elements.elemType = { 'node', 'edge', 'triangle' } ;
 
@@ -32,6 +33,7 @@ initialConds = struct();
 [ mesh.nodesCoords, mesh.conecCell ] = meshFileReader( 'inclusionCirc.msh' )
 
 analysisSettings.methodName    = 'newtonRaphson' ;
+% analysisSettings.methodName    = 'newmark' ;
 analysisSettings.stopTolIts    = 30      ;
 analysisSettings.stopTolDeltau = 1.0e-12 ;
 analysisSettings.stopTolForces = 1.0e-12 ;
@@ -42,5 +44,6 @@ analysisSettings.deltaT        = 1      ;
 %md### Output parameters
 otherParams.problemName = 'inclusionWave' ;
 otherParams.plotsFormat = 'vtk' ;
+otherParams.spitMatrices = true ;
 %md
 [matUs, loadFactorsMat] = ONSAS( materials, elements, boundaryConds, initialConds, mesh, analysisSettings, otherParams ) ;
