@@ -7,9 +7,12 @@ clear all, close all
 
 addpath(genpath(getenv('ONSAS_PATH')))
 
-
-% scalar parameters
-E = 1e3 ; nu = 0.25 ; p = 1.0 ; thickness = 1 ;
+% scalar parameters (parametros promedio del tejido mamario)
+E = 40e6     % 40 MPa
+nu = 0.49 ;  % 
+p = 1.0 ;    %
+thickness = 1 ;
+# parametro promedio del tejido mamario
 
 materials.hyperElasModel  = {'linearElastic'; 'linearElastic'} ;
 materials.hyperElasParams = { [ E nu ]; [ E nu ] }      ;
