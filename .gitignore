@@ -23,3 +23,7 @@ docs/src/examples/
 # committed for packages, but should be committed for applications that require a static
 # environment.
 Manifest.toml
+
+# ONSAS.m repo files
+ONSAS/
+examples/InclusionWave/ONSAS_call/output/
