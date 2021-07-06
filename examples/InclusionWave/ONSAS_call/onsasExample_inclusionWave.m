@@ -5,8 +5,8 @@
 
 clear all, close all
 
-addpath( genpath( '../../../ONSAS' ) )
-% addpath( genpath( '~/work/codigos/onsas/ONSAS.m_repo' ) )
+addpath(genpath(getenv('ONSAS_PATH')))
+
 
 % scalar parameters
 E = 1e3 ; nu = 0.25 ; p = 1.0 ; thickness = 1 ;
