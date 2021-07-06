@@ -2,8 +2,9 @@ l = 0.1 ;
 ly = 0.5*l;
 
 ms = 0.05*l ;
+//ms = 0.5*l ;
 
-r1  = 0.2*ly ; 
+r1  = 0.2*ly ;
 x01 =  0.5*l-r1 ;
 y01 =  0.5*ly ;
 
@@ -32,9 +33,9 @@ Line Loop(2) = {6, 7};
 Plane Surface(1) = {1};
 Plane Surface(2) = {2};
 
-Physical Point ("00_01_01_00") = {5};
-
-Physical Line ("00_02_02_00") = {1,2,5};
+Physical Point ("00_01_01_00") = {1};
+Physical Point ("00_01_02_00") = {2};
+Physical Point ("00_01_03_00") = {4};
 
 Physical Surface("01_03_00_00") = {1};
 Physical Surface("02_03_00_00") = {2};
