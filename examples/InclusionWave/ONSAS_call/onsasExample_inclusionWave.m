@@ -9,7 +9,7 @@ addpath(genpath(getenv('ONSAS_PATH')))
 
 % scalar parameters (parametros promedio del tejido mamario)
 E = 40e6     % 40 MPa
-nu = 0.49 ;  % 
+nu = 0.49 ;  %
 p = 1.0 ;    %
 thickness = 1 ;
 # parametro promedio del tejido mamario
@@ -35,12 +35,12 @@ initialConds = struct();
 
 [ mesh.nodesCoords, mesh.conecCell ] = meshFileReader( 'inclusionCirc.msh' )
 
-analysisSettings.methodName    = 'newtonRaphson' ;
-% analysisSettings.methodName    = 'newmark' ;
+analysisSettings.methodName    = 'alphaHHT' ;
 analysisSettings.stopTolIts    = 30      ;
 analysisSettings.stopTolDeltau = 1.0e-12 ;
 analysisSettings.stopTolForces = 1.0e-12 ;
 analysisSettings.finalTime      = 2       ;
+analysisSettings.alphaHHT      = 0      ;
 analysisSettings.deltaT        = 1      ;
 %md
 %md
