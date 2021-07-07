@@ -5,14 +5,17 @@
 
 clear all, close all
 
+global spitMatrices
+spitMatrices = true
+
 addpath(genpath(getenv('ONSAS_PATH')))
 
 % scalar parameters (parametros promedio del tejido mamario)
-E = 20e6     % 40 MPa
+E = 20e6     % 20 MPa
 nu = 0.49 ;  %
 p = 1.0 ;    %
 thickness = 1 ;
-density = 2200 ; % parametro promedio del tejido mamario
+density = 950 ; % parametro promedio del tejido mamario
 
 materials.hyperElasModel  = {'linearElastic'; 'linearElastic'} ;
 materials.hyperElasParams = { [ E nu ]; [ 5*E nu ] }      ;
