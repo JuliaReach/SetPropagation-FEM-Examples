@@ -3,10 +3,10 @@ import Literate
 import SetPropagation_FEM_Examples: @modelpath
 
 MODELS = [
-    #joinpath(@__DIR__, "..", "examples", "sdof"),
-    #joinpath(@__DIR__, "..", "examples", "clamped"),
-    #joinpath(@__DIR__, "..", "examples", "heat1d"),
-    joinpath(@__DIR__, "..", "examples", "Heat3D")
+    joinpath(@__DIR__, "..", "examples", "SDOF"),
+    #joinpath(@__DIR__, "..", "examples", "Clamped"),
+    #joinpath(@__DIR__, "..", "examples", "Heat1D"),
+    #joinpath(@__DIR__, "..", "examples", "Heat3D")
 ]
 GENERATEDDIR = joinpath(@__DIR__, "src", "examples")
 MODELDIR = joinpath(@__DIR__, "..", "examples")
