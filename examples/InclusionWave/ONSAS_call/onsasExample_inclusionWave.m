@@ -5,13 +5,13 @@
 
 clear all, close all
 
-global spitMatrices
-spitMatrices = true
+%global spitMatrices
+%spitMatrices = true
 
 addpath(genpath(getenv('ONSAS_PATH')))
 
 % scalar parameters (parametros promedio del tejido mamario)
-E = 20e6     % 20 MPa
+E = 10e6     % 20 MPa
 nu = 0.49 ;  %
 p = 1.0 ;    %
 thickness = 1 ;
@@ -27,7 +27,7 @@ elements.elemTypeParams = { []; [] ; 2  } ;
 elements.elemTypeGeometry = { []; thickness ; thickness } ;
 
 boundaryConds.loadsCoordSys = {[]; []; 'global'  } ;
-boundaryConds.loadsTimeFact = { []; []; @(t) 1e4*( 3*(t<5e-5) - 3*(t<10e-5) + 1*(t<15e-5) ) } ;
+boundaryConds.loadsTimeFact = { []; []; @(t) 5e6*( 3*(t<5e-5) - 3*(t<10e-5) + 1*(t<15e-5) ) } ;
 boundaryConds.loadsBaseVals = { []; []; [ 0 0 -p 0  0 0 ]  } ;
 boundaryConds.imposDispDofs = { [1 3] ; [3] ; []  } ;
 boundaryConds.imposDispVals = { [0 0] ; [0] ; []  } ;
@@ -42,9 +42,9 @@ analysisSettings.methodName    = 'newmark' ;
 analysisSettings.stopTolIts    = 30      ;
 analysisSettings.stopTolDeltau = 1.0e-12 ;
 analysisSettings.stopTolForces = 1.0e-12 ;
-analysisSettings.finalTime      = 150e-5    ;
+analysisSettings.finalTime     = 20e-5    ;
 analysisSettings.alphaNM       = 0.25    ;
-analysisSettings.deltaT        = .25e-5    ;
+analysisSettings.deltaT        = .1e-5    ;
 analysisSettings.deltaNM       = 0.5     ;
 %md
 %md
