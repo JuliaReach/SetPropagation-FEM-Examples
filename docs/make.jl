@@ -13,10 +13,12 @@ makedocs(
                              collapselevel = 1,
                              assets = ["assets/juliareach-light.css"]),
     pages = ["Introduction" => "introduction.md",
-        #"Harmonic oscillator" => "examples/sdof.md",
-        #"Clamped-Free Bar" => "examples/clamped.md",
-        #"One-dimensional heat transfer" => "examples/heat1d.md",
-        "Concrete casting heat of hydration" => "examples/Heat3D.md"]
+        #"Set propagation concepts" => "concepts.md",
+        "Single degree-of-freedom" => "examples/SDOF.md"
+        #"Clamped-Free Bar" => "examples/Clamped.md",
+        #"One-dimensional heat transfer" => "examples/Heat1D.md",
+        #"Concrete casting heat of hydration" => "examples/Heat3D.md"
+        ]
 )
 
 deploydocs(
