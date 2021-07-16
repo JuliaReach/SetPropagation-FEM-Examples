@@ -2,91 +2,9 @@
 
 # ### Equations of motion
 
-\subsubsection{Illustrative example: harmonic oscillator}\label{sec:illustrative_example}
-
-The set propagation definitions introduced in this section are illustrated using a single degree of freedom second order problem given by the following equation:
-%
-\begin{equation} \label{eq:harmonic_oscillator}
-\centering
-\ddot{u}(t) + \omega^2 u(t) = 0,
-\end{equation}
-where $\omega$ is a scalar and $u$ is the unknown. %
-%
-This problem can be associated with a spring-mass system, where $u(t)$ is the elongation of the spring at time $t$ and the mass and stiffness set a natural frequency $\omega$. In this case we consider $\omega = 4 \pi$.
-
-Let us introduce the state variable $v(t) := \dot{u}(t)$ and define the vector $\bfx(t) = [ u(t), v(t) ]^T$. Then Eq.~\eqref{eq:harmonic_oscillator} can be written in the following first order form
-%
-\begin{equation} \label{eq:harmonic_oscillator_first_order}
-\dot{\bfx}(t) =
-\left[
-\begin{matrix}
-0 & 1 \\
--\omega^2 & 0
-\end{matrix}
-\right] \, \bfx(t).
-\end{equation}
-
-Two cases are considered for the initial conditions, first a single initial condition given by $u(0)=1$ and $v(0)=0$, and a second case where the initial conditions belong to a set. %
-%
-This problem is solved using set propagation and the results obtained for the single initial condition are shown in Fig.~\ref{fig:sdof_singleton}.
-%
-The time step-size used is $\delta = 0.025$.
-%
-The set $\Omega_0$ from Fig.~\ref{fig:sdof_singleton_discretization} includes the analytic trajectory within $[0, \delta]$, and such set is propagated to cover the solution for further time intervals as in Fig.~\ref{fig:sdof_singleton_flowpipe}.
-%
-It is worth noting that even when the initial condition is a singleton, the set propagation technique returns a sequence of sets, and such sequence guarantees an enclosure of the analytic solution at \emph{any} time $t \in [0, T] \subset \mathbb{R}$.
-%
-For comparison, we also plot the analytic solution of Eq.~\eqref{eq:harmonic_oscillator_first_order} (magenta solid line) and a numerical solution obtained using the Newmark's method with time step $\delta/5$ (red triangle markers).
-%
-The figure shows other set representations and concepts that will be developed in the following paragraphs.
-
-\begin{figure}[htbp]
-	\centering
-	\begin{subfigure}[b]{0.7\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{sdof_singleton_discretization.pdf}
-		\caption{The set $\Omega_0$ (orange) encloses the true solution (magenta) at the endpoints and at any intermediate time between $0$ and $\delta = 0.025$.}
-		\label{fig:sdof_singleton_discretization}
-	\end{subfigure}
-	~~
-	\begin{subfigure}[b]{0.7\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{sdof_singleton_flowpipe.pdf}
-		\caption{Set propagation using hyperrectangles (lightblue), zonotopes (green) and to assess the zonotopic overapproximation of $\Omega_0$, polygons (orange).}
-		\label{fig:sdof_singleton_flowpipe}
-	\end{subfigure}
-	\caption{Illustration of set-based integration of the simple harmonic oscillator example with single initial condition. Shown are phase-space plots $u(t)$ vs. $v(t)$ for the first reach-set (Fig. \ref{fig:sdof_singleton_discretization}), and for the first 9 reach-sets (Fig. \ref{fig:sdof_singleton_flowpipe}).}
-	\label{fig:sdof_singleton}
-\end{figure}
-
-
-The result obtained when a set of initial conditions is considered is shown in Fig.~\ref{fig:sdof_distributed}, together with few dozen trajectories with random initial conditions drawn from the initial set $\mathcal{X}_0 = \mathcal{U}_0 \times \mathcal{V}_0 = [0.9, 1.1] \times [-0.1, 0.1]$, where $\times$ denotes the Cartesian product.
-
-In both cases, it is shown that a single set-based integration covers infinitely many trajectories \emph{in dense time}, i.e. for all intermediate times between $0$ and $T$, where $T > 0$ is the time horizon, there is a reach-set that covers all the exact solutions.
-
-\begin{figure}[htbp]
-	\centering
-	\begin{subfigure}[b]{0.7\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{sdof_distributed_discretization.pdf}
-		\caption{The set $\Omega_0$ (orange) covers the right-most trajectories for intermediate times, which naturally escape linear interpolations (violet).}
-		\label{fig:sdof_distributed_discretization}
-	\end{subfigure}
-	~~
-	\begin{subfigure}[b]{0.7\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{sdof_distributed_flowpipe.pdf}
-		\caption{The flowpipe construction method for Eq.~\eqref{eq:discrete_recurrence} is wrapping-free: the area of the sets does not increase with time.}
-		\label{fig:sdof_distributed_flowpipe}
-	\end{subfigure}
-	\caption{Illustration of set-based integration of the simple harmonic oscillator with distributed initial conditions. Note that a single set-based integration covers all dynamically feasible behaviors: to illustrate this fact we plot 50 analytic solutions (magenta) uniformly distributed over $\mathcal{X}_0$.}
-	\label{fig:sdof_distributed}
-\end{figure}
-
-
 using ReachabilityAnalysis
 using StructuralDynamicsODESolvers
-using ReachabilityAnalysis: discretize # needed?
+using ReachabilityAnalysis: discretize
 using Plots, Plots.PlotMeasures, LaTeXStrings
 
 # Struct that holds a problem describing an harmonic oscillator with frequency ω:
@@ -355,9 +273,6 @@ end
 fig = plot_singleton_discretization()
 savefig(fig, "sdof_singleton_discretization.pdf")
 
-fig
-
-
 # ### Flowpipe
 
 model = StepIntersect(setops=:concrete)
@@ -415,8 +330,6 @@ end
 
 fig = plot_singleton_flowpipe()
 savefig(fig, "sdof_singleton_flowpipe.pdf")
-fig
-
 
 # ## Distributed initial conditions
 
@@ -502,7 +415,6 @@ end
 
 fig = plot_distributed_discretization()
 savefig(fig, "sdof_distributed_discretization.pdf")
-fig
 
 # ### Flowpipe
 
@@ -569,4 +481,3 @@ end
 
 fig = plot_distributed_flowpipe()
 savefig(fig, "sdof_distributed_flowpipe.pdf")
-fig
