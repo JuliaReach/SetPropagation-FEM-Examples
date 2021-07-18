@@ -1,11 +1,7 @@
 using ReachabilityAnalysis, StructuralDynamicsODESolvers
 
-(@isdefined TARGET_FOLDER) ? nothing : TARGET_FOLDER = ""
-
-# returns A = -inv(C) * K
-function load_heat1d(; file="heat1d_99.mat")
-    path = joinpath("mats", file)
-    vars = matread(path)
+function load_heat1d(; file)
+    vars = matread(file)
 
     K = vars["K"]
     C = vars["C"]
@@ -26,7 +22,7 @@ function solve_heat1d(; kwargs...)
     return solve(prob, alg=alg, NSTEPS=NSTEPS)
 end
 
-function _solve_heat1d(; file="heat1d_99.mat",
+function _solve_heat1d(; file,
                          δ=1e-5,
                          NSTEPS=10_000,
                          model=Forward(inv=true),
@@ -85,7 +81,7 @@ end
 # Solucion numerica con Backward Euler
 # use tol = 0.1 for 10% increase in the initial uncertainty
 # use tol = -0.1 for 10% decrease in the initial uncertainty
-function solve_heat1d_implicit_euler(; file="heat1d_99.mat", δ=1e-5, tol=0.1, NSTEPS=10_000, U₀=nothing)
+function solve_heat1d_implicit_euler(; file, δ=1e-5, tol=0.1, NSTEPS=10_000, U₀=nothing)
 
     K, C = load_heat1d(file=file)
 
@@ -183,7 +179,7 @@ end
 #   plot!(figg, xs, out[end-1], c=:magenta, lab="")
 #   plot!(figg, xs, out[end], c=:magenta, lab="")
 #   fig
-function varias_sol(; file="heat1d_99.mat", δ, tol, NSTEPS, NCURVAS)
+function varias_sol(; file, δ, tol, NSTEPS, NCURVAS)
     ## SM = Vector{Matrix{Float64}}
     ## SV = Vector{Vector{Float64}}
     gradientes = [] # Vector{SolBE{SM, SV}}()
@@ -236,8 +232,6 @@ function LGG_dirs_solucion(n)
 end
 
 function LGG_dirs_gradiente(n)
-    ## n = statedim(prob)
-
     B = Bidiagonal(ones(n), -ones(n-1), :U)
     B = [Vector(B[:, i]) for i in 2:size(B, 2)]
     vini = zeros(n); vini[1] = 1.0
@@ -245,8 +239,7 @@ function LGG_dirs_gradiente(n)
     insert!(B, 1, vini);
     push!(B, vend);
 
-    return vcat(B, .-B);
-
+    return vcat(B, .-B)
 end
 
 ## grad_lgg = solucion con LGG usando LGG_grad_dirs
@@ -256,10 +249,7 @@ function gradiente_LGG_graddirs(; grad_lgg, L=1.0, paso_temporal)
     xs = range(0, L, step=Δx)
     α = 1/Δx
     intervs_xs = [IA.Interval(xs[i], xs[i+1]) for i in 1:n]
-    Flowpipe([ReachSet(
-                  Interval(-grad_lgg[paso_temporal].sf[i+n] * α, grad_lgg[paso_temporal].sf[i] * α),
-                  intervs_xs[i])
-              for i in 1:n])
+    return [ReachSet(Interval(-grad_lgg[paso_temporal].sf[i+n] * α, grad_lgg[paso_temporal].sf[i] * α), intervs_xs[i]) for i in 1:n] |> Flowpipe
 end
 
 ## solu_lgg = solucion con LGG usando LGG_solu_dirs (direcciones cartesianas)
@@ -269,8 +259,40 @@ function gradiente_LGG_soludirs(; solu_lgg, LGG_grad_dirs, L=1.0, paso_temporal)
     xs = range(0, L, step=Δx)
     α = 1/Δx
     intervs_xs = [IA.Interval(xs[i], xs[i+1]) for i in 1:n]
-    Flowpipe([ReachSet(
-            Interval(-α*ρ(LGG_grad_dirs[i+n], solu_lgg[paso_temporal]), α*ρ(LGG_grad_dirs[i], solu_lgg[paso_temporal])),
-            intervs_xs[i])
-              for i in 1:n])
+    return [ReachSet(Interval(-α*ρ(LGG_grad_dirs[i+n], solu_lgg[paso_temporal]), α*ρ(LGG_grad_dirs[i], solu_lgg[paso_temporal])), intervs_xs[i]) for i in 1:n] |> Flowpipe
+end
+
+# ===============================================================
+# Methods to plot flowpipe "snapshots"
+# ===============================================================
+
+# no-op
+ReachabilityAnalysis.convexify(R::ReachabilityAnalysis.AbstractReachSet) = R
+
+function flowpipe_snapshot(sol, t)
+    n = dim(sol)
+    solt = sol(t) |> convexify
+    X = [set(overapproximate(Projection(solt, i:i), Interval)) for i in 1:n]
+    R = ReachSet(CartesianProductArray(X), tspan(solt))
+    _flowpipe_snapshot(R)
+end
+
+# cartesian product array of intervals
+function _flowpipe_snapshot(X::ReachSet{N, CartesianProductArray{N, Interval{N, IntervalArithmetic.Interval{N}}}}) where {N}
+    n = dim(X)
+    xs = range(0, 1, length=n+2)
+
+    fp_espacial = array(set(X))
+    n_x = length(fp_espacial)
+    fpx1 = [Interval(xs[k+1], xs[k+1]) × fp_espacial[k] for k in 1:n_x]
+
+    T0 = 0.0 # temperature at the endpoints
+    aux = [Interval(xs[1], xs[1]) × Interval(T0[1], T0[1])]
+    for k = 1:n_x
+        push!(aux, fpx1[k])
+    end
+    push!(aux, Interval(xs[end], xs[end]) × Interval(T0[end], T0[end]))
+    fpx2 = UnionSetArray([ConvexHull(aux[k], aux[k+1]) for k in 1:length(aux)-1])
+
+    return fpx2
 end

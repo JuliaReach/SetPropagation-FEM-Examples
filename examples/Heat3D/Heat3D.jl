@@ -116,41 +116,6 @@ function mintemp(sol::ReachSolution; nodes=nothing)
     return (Tmin=Tmin, node=imin, step=kmin, dt=dtmin)
 end
 
-# ===============================================================
-# Methods to plot flowpipe "snapshots"
-# ===============================================================
-
-# no-op
-ReachabilityAnalysis.convexify(R::ReachabilityAnalysis.AbstractReachSet) = R
-
-function flowpipe_snapshot(sol, t)
-    n = dim(sol)
-    solt = sol(t) |> convexify
-    X = [set(overapproximate(Projection(solt, i:i), Interval)) for i in 1:n]
-    R = ReachSet(CartesianProductArray(X), tspan(solt))
-    _flowpipe_espacial(R)
-end
-
-# cartesian product array of intervals
-function _flowpipe_snapshot(X::ReachSet{N, CartesianProductArray{N, Interval{N, IntervalArithmetic.Interval{N}}}}) where {N}
-    n = dim(X)
-    xs = range(0, 1, length=n+2)
-
-    fp_espacial = array(set(X))
-    n_x = length(fp_espacial)
-    fpx1 = [Interval(xs[k+1], xs[k+1]) × fp_espacial[k] for k in 1:n_x]
-
-    T0 = 0.0 # temperature at the endpoints
-    aux = [Interval(xs[1], xs[1]) × Interval(T0[1], T0[1])]
-    for k = 1:n_x
-        push!(aux, fpx1[k])
-    end
-    push!(aux, Interval(xs[end], xs[end]) × Interval(T0[end], T0[end]))
-    fpx2 = UnionSetArray([ConvexHull(aux[k], aux[k+1]) for k in 1:length(aux)-1])
-
-    return fpx2
-end
-
 ## Control nodes
 controlNodeA = 11^2*6+1
 controlNodeB = 11^2*9+1

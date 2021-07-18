@@ -43,7 +43,8 @@ function main()
     # --------------------------
     TARGET_FOLDER = joinpath(OUTPUT_FOLDER, "Heat1D")
     println("\n (3/4) Running one-dimensional heat transfer model...\n")
-    include(joinpath("examples", "Heat1D", "Heat1D.jl"))
+    include(joinpath("examples", "Heat1D", "Heat1D_TempProfile.jl"))
+    include(joinpath("examples", "Heat1D", "Heat1D_TempGradient.jl"))
 
     # --------------------------
     # Heat 3D
