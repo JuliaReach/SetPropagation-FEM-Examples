@@ -1,137 +1,346 @@
-#=
-This model is taken from [1]. The theoretical derivations of the analytic solution can be found in [2].
+using Plots, LaTeXStrings, Plots.PlotMeasures
+using LinearAlgebra
 
-[1] Malakiyeh, Mohammad Mahdi, Saeed Shojaee, and Klaus-Jürgen Bathe. "The Bathe time integration method revisited for prescribing desired numerical dissipation." Computers & Structures 212 (2019): 289-298.
+(@isdefined TARGET_FOLDER) ? nothing : TARGET_FOLDER = ""
+include("Clamped_Model.jl")
 
-[2] Mechanical Vibrations, Gerardin et al, page 250-251.
-=#
+NSTEPS = 12000
+nMasses = 1000
 
-using ReachabilityAnalysis, LinearAlgebra, LazySets, SparseArrays
-using StructuralDynamicsODESolvers
-const SD = StructuralDynamicsODESolvers
-using ReachabilityAnalysis: solve, discretize
+# computed parameters
+finalTime = NSTEPS * dtn ;
+tdom = range(0, finalTime, length = NSTEPS + 1);
+
+PosTwoThirds = 700 ;
+PosMiddle    = round(Int, nMasses / 2) ;
+VelTwoThirds = PosTwoThirds + nMasses;
+VelMiddle    = PosMiddle + nMasses;
+
+Uₒ = zeros( nMasses ) ;
+Vₒ = zeros( nMasses ) ;
+p = InitialValueProblem(s1000, (Uₒ,Vₒ));
+
+solBathe   = solve(p, Bathe(dtn), NSTEPS=NSTEPS)
+solNewmark = solve(p, Trapezoidal(dtn), NSTEPS=NSTEPS);
+
+M = p.s.M; C = p.s.C; K = p.s.K
+
+uBathe_PosTwoThirds = [s[PosTwoThirds] for s in displacements(solBathe)]
+uNewmark_PosTwoThirds = [s[PosTwoThirds] for s in displacements(solNewmark)]
+uBathe_VelTwoThirds = [s[PosTwoThirds] for s in velocities(solBathe)]
+uNewmark_VelTwoThirds = [s[PosTwoThirds] for s in velocities(solNewmark)]
+
+# =======
+# ORBIT
+# =======
+
+p = InitialValueProblem(s1000, Singleton(zeros(2*nMasses)))
+@time sol_nobloating = solve(p, NSTEPS=NSTEPS, alg=ORBIT(δ=dtn))
+
+# =======
+# LGG09
+# =======
+
 using LazySets.Arrays
 
-LazySets.set_ztol(Float64, 1e-15)
-LazySets.set_atol(Float64, 1e-15)
-LazySets.set_rtol(Float64, 1e-15)
+ph = homogeneize(normalize(p));
+statedim(p), statedim(ph)
 
-function clamped_bar(; N=1000, E=30e6, ρ=7.3e-4, A=1, L=200)
-    ℓ = L / N
-    K = (E * A / ℓ) * SymTridiagonal(fill(2.0, N), fill(-1.0, N))
-    K[end, end] = E * A / ℓ
+uplus1  = SingleEntryVector(PosTwoThirds, 2*nMasses+1,  1.0)
+uminus1 = SingleEntryVector(PosTwoThirds, 2*nMasses+1, -1.0)
+vplus1  = SingleEntryVector(VelTwoThirds, 2*nMasses+1,  1.0)
+vminus1 = SingleEntryVector(VelTwoThirds, 2*nMasses+1, -1.0)
 
-    M = (ρ * A * ℓ / 2) * Diagonal(vcat(fill(2.0, N-1), 1.0))
-    M[end, end] = ρ * A * ℓ / 2
+#uplus2  = SingleEntryVector(PosMiddle,    2*nMasses+1,  1.0)
+#uminus2 = SingleEntryVector(PosMiddle,    2*nMasses+1, -1.0)
+#vplus2  = SingleEntryVector(VelMiddle,    2*nMasses+1,  1.0)
+#vminus2 = SingleEntryVector(VelMiddle,    2*nMasses+1, -1.0)
 
-    return M, K
+#dirs = [uminus1, uplus1, vminus1, vplus1, uminus2, uplus2, vminus2, vplus2];
+dirs = [uminus1, uplus1, vminus1, vplus1];
+
+# TODO use StepIntersect (with cache)
+# for efficiency we use box OA of the discretized set
+model = Forward(setops=:box)
+alg = LGG09(δ=dtn, template=dirs, approx_model=model);
+
+@time sol_lgg = solve(ph, NSTEPS=NSTEPS, alg=alg);
+
+# @time sol_lgg = solve(p, NSTEPS=NSTEPS, alg=LGG09(δ=dtn, template=dirs, approx_model=model), homogeneize=true);
+# FIXME assertion error with the dimension
+
+# project the support function
+sol_PosTwoThirds = flatten(sol_lgg, (2, 1))
+sol_VelTwoThirds = flatten(sol_lgg, (4, 3));
+
+# TODO use StepIntersect (with cache)
+# for efficiency we use box OA of the discretized set
+model = StepIntersect(setops=:box)
+alg = LGG09(δ=dtn, template=dirs, approx_model=model);
+@time sol_lgg_step_intersect = solve(ph, NSTEPS=NSTEPS, alg=alg);
+
+# @time sol_lgg = solve(p, NSTEPS=NSTEPS, alg=LGG09(δ=dtn, template=dirs, approx_model=model), homogeneize=true);
+# FIXME assertion error with the dimension
+
+sol_PosTwoThirds_step_intersect = flatten(sol_lgg_step_intersect, (2, 1))
+sol_VelTwoThirds_step_intersect = flatten(sol_lgg_step_intersect, (4, 3));
+
+# =========================
+# graficos desplazamientos
+# =========================
+
+# ventana de tiempo donde calculo la solucion analitica
+tdomasol = range(0.0, finalTime, length=10_000)
+
+@time asol_PosTwoThirds, asol_VelTwoThirds = _sol_analitica_clamped(PosTwoThirds, tdomasol, 500);
+
+function plot_displacements()
+
+    fig = plot(xlab=L"\textrm{Time}", ylab=L"\textrm{Displacement of node } %$PosTwoThirds",
+               legend=:bottomright,
+               legendfontsize=15,
+               tickfont=font(20, "Times"),
+               guidefontsize=20,
+               xguidefont=font(20, "Times"),
+               yguidefont=font(20, "Times"),
+               xtick=([0, 0.0025, 0.005, 0.0075, 0.01],[L"0.000", L"0.0025", L"0.0050", L"0.0075", L"0.01"]),
+               ytick=([0, 0.02, 0.04, 0.06, 0.08, 0.1], [L"0.00", L"0.02", L"0.04", L"0.06", L"0.08", L"0.1"]),
+               xlims=(0.0, 0.012), ylims=(-0.002, 0.1),
+               bottom_margin=6mm, left_margin=20mm, right_margin=4mm, top_margin=3mm, size=(900, 600))
+
+    # flowpipe
+    plot!(fig, sol_PosTwoThirds_step_intersect, vars=(0, 1), c=:lightblue, lc=:lightblue, lw=4.0, alpha=1., lab="") # lab=L"\textrm{Flowpipe}")
+
+    # plot!(fig, tdom, uNewmark, seriestype=:path, marker=:none, color=:red, lab=L"\textrm{Newmark}", lw=1.0)
+
+    # plot!(fig, tdom, uBathe, seriestype=:path, marker=:none, color=:green, lab=L"\textrm{Bathe}", lw=1.0)
+    # plot!(fig, sol_nobloating, vars=(0, PosTwoThirds), seriestype=:path, marker=:none, lw = 2.0, c=:blue, lab=L"\textrm{Analytic (ODE)}")
+
+    tZoomDispLeft  = 0.0055
+    tZoomDispRight = 0.0058
+
+    yZoomDispBott  = 0.08
+    yZoomDispTop = 0.098
+
+    # == Analytic ODE ==
+    plot!(fig, sol_nobloating, vars=(0, PosTwoThirds), seriestype=:path, marker=:none, lw = 1.5, alpha=1, c=:blue, lab="")
+    #plot!(fig, sol_nobloating[ai:paso:bi], vars=(0, VelTwoThirds), linetype=:scatter, marker=:square, markersize=5,  c=:blue, lab=L"\textrm{Analytic (ODE)}")
+
+
+    plot!(fig, tdomasol, asol_PosTwoThirds, c=:magenta, lw=1., lab="") # , lab=L"\textrm{Analytic (PDE)}")
+
+    PBotLeft  = [tZoomDispLeft,yZoomDispBott]
+    PBotRight = [tZoomDispRight,yZoomDispBott]
+    PTopLeft  = [tZoomDispLeft,yZoomDispTop]
+    PTopRight = [tZoomDispRight,yZoomDispTop]
+
+    L1 = LineSegment( PBotLeft, PBotRight )
+    L2 = LineSegment( PBotRight, PTopRight )
+    L3 = LineSegment( PTopRight, PTopLeft )
+    L4 = LineSegment( PTopLeft, PBotLeft )
+
+    plot!(fig, L1, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
+    plot!(fig, L2, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
+    plot!(fig, L3, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
+    plot!(fig, L4, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
 end
 
-"""
-    clamped_free(; N)
+fig = plot_displacements()
+savefig(fig, joinpath(TARGET_FOLDER, "u_node700.pdf"))
 
-Free (no forcing term) instance of the clamped bar.
-"""
-function clamped_free(; N)
-    M, K = clamped_bar(N=N)
-    C = spzeros(N, N) # no damping
-    sys = SecondOrderLinearContinuousSystem(M, C, K)
-end
+# ================================
+# graficos desplazamientos (ZOOM)
+# ================================
 
-"""
-    clamped_forced(; N, F=10e3, E=30e6, A=1)
+function plot_displacements_zoom()
 
-Forced (constant force `F`) instance of the clamped bar.
-"""
-function clamped_forced(; N, F=10e3, E=30e6, A=1)
-    M, K = clamped_bar(N=N)
-    C = spzeros(N, N) # no damping
-    F = vcat(zeros(N-1), F) # the right-most node is excited
-    sys = SecondOrderAffineContinuousSystem(M, C, K, F)
-end
+    tZoomDispLeft  = 0.00559
+    tZoomDispRight = 0.00572
 
-# "nominal" step size
-const dtn = 9.88e-7
+    idxtleft = findfirst(t -> t > tZoomDispLeft, tdom)
+    idxtright = findfirst(t -> t > tZoomDispRight, tdom)
 
-# problem instances
-s5 = clamped_forced(N=5);
-s10 = clamped_forced(N=10);
-s20 = clamped_forced(N=20);
-s30 = clamped_forced(N=30);
-s50 = clamped_forced(N=50);
-s100 = clamped_forced(N=100);
-s200 = clamped_forced(N=200);
-s500 = clamped_forced(N=500);
-s1000 = clamped_forced(N=1000);
+    yZoomDispBott  = 0.0925
+    yZoomDispTop = 0.0937
 
-# singleton initial condition
-X0(n) = Singleton(zeros(2n))
-prob(s) = InitialValueProblem(s, X0(statedim(s)))
+    fig = plot(xlab=L"\textrm{Time } (\times 10^{-3})", ylab=L"\textrm{Displacement of node } %$PosTwoThirds",
+               legend=:bottomright,
+               legendfontsize=15,
+               tickfont=font(20, "Times"),
+               guidefontsize=20,
+               xguidefont=font(20, "Times"),
+               yguidefont=font(20, "Times"),
+               xtick=([0.00560, 0.00562, 0.00564, 0.00566, 0.00568, 0.00570, 0.00572], [L"5.60", L"5.62", L"5.64", L"5.66", L"5.68", L"5.70", L"5.72"]),
+               ytick=([0.09250, 0.09275, 0.09300, 0.09325, 0.09350], [L"0.09250", L"0.09275", L"0.09300", L"0.09325", L"0.09350"]),
+               ylims=(yZoomDispBott-0.00005, 0.09355), xlims=(5.6e-3, tZoomDispRight),
+               bottom_margin=6mm, left_margin=30mm, right_margin=10mm, top_margin=3mm, size=(900, 600))
 
-# box initial condition
-prob_box(s, e) = InitialValueProblem(s, X0(statedim(s)) + BallInf(2*statedim(s), e))
+    # flowpipe
+    plot!(fig, sol_PosTwoThirds_step_intersect(tZoomDispLeft .. tZoomDispRight), vars=(0, 1), c=:lightblue, lc=:black, lw=0.5, alpha=1., lab=L"\textrm{Flowpipe}")
 
-# solve with GLGM06
-function solve_glg(s; δ=dtn, NSTEPS=10, model=Forward(inv=false))
-    ivp = prob(s)
-    alg = GLGM06(δ=δ, approx_model=model)
-    sol = solve(ivp, NSTEPS=NSTEPS, alg=alg, homogeneize=true)
-end
+    # solucion analitica
+    tdomasol_zoom = range(tZoomDispLeft, tZoomDispRight, length=15_000)
 
-# solve with LGG09 for nodeidx
-function solve_lgg(s; δ=dtn, NSTEPS=100, nodeidx, model=Forward(inv=false))
-    ivp = prob(s)
-    n = statedim(s)
-    eplus = SingleEntryVector(nodeidx, 2n+1, 1.0)
-    eminus = SingleEntryVector(nodeidx, 2n+1, -1.0)
+    @time asol_PosTwoThirds_zoom, asol_VelTwoThirds_zoom = _sol_analitica_clamped(PosTwoThirds, tdomasol_zoom, 2000);
 
-    dirs = [eminus, eplus]
+    plot!(fig, tdomasol_zoom, asol_PosTwoThirds_zoom, c=:magenta, lw=1.5, lab=L"\textrm{Analytic (PDE)}")
 
-    alg = LGG09(δ=δ, template=dirs, approx_model=model)
-    sol = solve(ivp, NSTEPS=NSTEPS, alg=alg, homogeneize=true)
-end
+    paso = 8
 
-# solve with BOX
-# usage: sol = solve_box(s10, NSTEPS=100)
-function solve_box(s; δ=dtn, NSTEPS=100, model=Forward(inv=false))
+    ai = idxtleft
+    bi = idxtright
 
-    # p = prob(s)
-    # ph = homogeneize(normalize(p))
-    # @time pd = discretize(ph, dt, model) # ~35 sec for 1000 nodes
+    # == Newmark ==
+    # continua sin markers
+    plot!(fig, tdom[ai:bi], uNewmark_PosTwoThirds[ai:bi], seriestype=:path, marker=:none, lab="", color=:red, lw=2.0)
 
-    alg = BOX(δ=δ, approx_model=model)
-    p = prob(s)
-    sbox = solve(p, alg=alg, NSTEPS=NSTEPS, homogeneize=true)
-    return sbox
-end
+    # con markers pero salteados
+    plot!(fig, tdom[ai:paso:bi], uNewmark_PosTwoThirds[ai:paso:bi], linetype=:scatter, marker=:circle, markersize=5, lab=L"\textrm{Newmark}", color=:red)
 
-# Ec. (4.181) libro Geradin & Rixen (2015)
-function _sol_analitica_clamped(x, t, Ncorte)
+    # == Bathe ==
+    # continua sin markers
+    plot!(fig, tdom[ai:bi], uBathe_PosTwoThirds[ai:bi], seriestype=:path, marker=:none, lab="", color=:green, lw=2.0)
 
-    F = 10E3
-    E = 30E6
-    dens = 7.3E-4
-    L = 200
-    A = 1
+    # con markers pero salteados
+    plot!(fig, tdom[ai:paso:bi], uBathe_PosTwoThirds[ai:paso:bi], linetype=:scatter, marker=:utriangle, markersize=5, lab=L"\textrm{Bathe}", color=:green)
 
-    # reescalar
-    nMasses = 1000
-    x = x*L/nMasses
-
-    m = A*dens
-    c = sqrt(E*A/m)
-
-    α = 8*F*L/π^2/E/A
-
-    β = π/2/L
-    u = sin.( β * x ) * ( 1.0 .- cos.( β * c * t ) )
-    v = sin.( β * x ) * β * c * sin.( β * c * t )
-
-    for s in 2:Ncorte
-        u .+= (-1)^(s-1)/(2*s-1)^2 * sin.( (2*s-1)* β * x ) * ( 1.0 .- cos.( (2*s-1)* β * c * t ) )
-        v .+= (-1)^(s-1)/(2*s-1)^2 * sin.( (2*s-1)* β * x ) * ( (2*s-1)* β * c * sin.( (2*s-1)* β * c * t ) )
-    end
-
-    return u*α, v*α
+    # == Analytic ODE ==
+    plot!(fig, sol_nobloating, vars=(0, PosTwoThirds), seriestype=:path, marker=:none, lw = 1.5, alpha=1, c=:blue, lab=L"\textrm{Analytic (ODE)}")
+    plot!(fig, sol_nobloating[ai:paso:bi], vars=(0, PosTwoThirds), linetype=:scatter, marker=:square, markersize=5,  c=:blue, lab="")
 
 end
+
+fig = plot_displacements_zoom()
+savefig(fig, joinpath(TARGET_FOLDER, "u_node700_zoom.pdf"))
+
+# =========================
+# velocidad
+# =========================
+
+function plot_velocity()
+
+    fig = plot(xlab=L"\textrm{Time}", ylab=L"\textrm{Velocity of node } %$PosTwoThirds",
+               legend=:bottomright,
+               legendfontsize=15,
+               tickfont=font(20, "Times"),
+               guidefontsize=20,
+               xguidefont=font(20, "Times"),
+               yguidefont=font(20, "Times"),
+               xtick=([0, 0.0025, 0.005, 0.0075, 0.01],[L"0.000", L"0.0025", L"0.0050", L"0.0075", L"0.01"]),
+               ytick=([-75, -50, -25, 0, 25, 50, 75], [L"-75", L"-50", L"0.0", L"25", L"50", L"75"]),
+               xlims=(0.0, 0.012), # , ylims=(-90.0, 90.0),
+               bottom_margin=6mm, left_margin=20mm, right_margin=4mm, top_margin=3mm, size=(900, 600))
+
+    # flowpipe
+    plot!(fig, sol_VelTwoThirds_step_intersect, vars=(0, 1), c=:lightblue, lc=:lightblue, lw=4.0, alpha=1., lab="") # lab=L"\textrm{Flowpipe}")
+
+    # plot!(fig, tdom, uNewmark, seriestype=:path, marker=:none, color=:red, lab=L"\textrm{Newmark}", lw=1.0)
+
+    # plot!(fig, tdom, uBathe, seriestype=:path, marker=:none, color=:green, lab=L"\textrm{Bathe}", lw=1.0)
+    # plot!(fig, sol_nobloating, vars=(0, PosTwoThirds), seriestype=:path, marker=:none, lw = 2.0, c=:blue, lab=L"\textrm{Analytic (ODE)}")
+
+    tZoomDispLeft  = 0.008175
+    tZoomDispRight = 0.008375
+
+    yZoomDispBott  = 40
+    yZoomDispTop = 92
+
+    # == Analytic ODE ==
+    plot!(fig, sol_nobloating, vars=(0, VelTwoThirds), seriestype=:path, marker=:none, lw = 1.5, alpha=1, c=:blue, lab="")
+    #plot!(fig, sol_nobloating[ai:paso:bi], vars=(0, VelTwoThirds), linetype=:scatter, marker=:square, markersize=5,  c=:blue, lab=L"\textrm{Analytic (ODE)}")
+
+    # == Analytic PDE ==
+    tdomasol = range(0, finalTime, length=1000)
+
+    _, asol_VelTwoThirds = _sol_analitica_clamped(PosTwoThirds, tdomasol, 1000);
+
+    plot!(fig, tdomasol, asol_VelTwoThirds, c=:magenta, lw=1.5, lab="") # , lab=L"\textrm{Analytic (PDE)}")
+
+    # ZOOM BOX
+    PBotLeft  = [tZoomDispLeft,yZoomDispBott]
+    PBotRight = [tZoomDispRight,yZoomDispBott]
+    PTopLeft  = [tZoomDispLeft,yZoomDispTop]
+    PTopRight = [tZoomDispRight,yZoomDispTop]
+
+    L1 = LineSegment( PBotLeft, PBotRight )
+    L2 = LineSegment( PBotRight, PTopRight )
+    L3 = LineSegment( PTopRight, PTopLeft )
+    L4 = LineSegment( PTopLeft, PBotLeft )
+
+    plot!(fig, L1, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
+    plot!(fig, L2, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
+    plot!(fig, L3, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
+    plot!(fig, L4, color=:black, style=:dash, lw=3.0, seriestype=:solid, marker=:none, alpha=1.)
+
+end
+
+fig = plot_velocity()
+savefig(fig, joinpath(TARGET_FOLDER, "v_node700.pdf"))
+
+# ==============================
+# graficos velocidad (ZOOM)
+# ==============================
+
+function plot_velocity_zoom()
+
+
+    tZoomDispLeft  = 0.008175
+    tZoomDispRight = 0.008375
+
+    yZoomDispBott  = 30
+    yZoomDispTop = 92
+
+    idxtleft = findfirst(t -> t > tZoomDispLeft, tdom)
+    idxtright = findfirst(t -> t > tZoomDispRight, tdom)
+
+
+    fig = plot(xlab=L"\textrm{Time } (\times 10^{-3})", ylab=L"\textrm{Velocity of node } %$PosTwoThirds",
+               legend=:bottomright,
+               legendfontsize=15,
+               tickfont=font(20, "Times"),
+               guidefontsize=20,
+               xguidefont=font(20, "Times"),
+               yguidefont=font(20, "Times"),
+               xtick=([0.00820, 0.00825, 0.00830, 0.00835], [L"8.20", L"8.25", L"8.30", L"8.35"]),
+               ytick=([30, 40, 50, 60, 70, 80, 90], [L"30", L"40", L"50", L"60", L"70", L"80", L"90"]),
+               ylims=(yZoomDispBott, yZoomDispTop),
+               xlims=(tZoomDispLeft, tZoomDispRight),
+               bottom_margin=6mm, left_margin=30mm, right_margin=10mm, top_margin=3mm, size=(900, 600))
+
+    # flowpipe
+    plot!(fig, sol_VelTwoThirds_step_intersect(tZoomDispLeft .. tZoomDispRight), vars=(0, 1), c=:lightblue, lc=:black, lw=0.5, alpha=1., lab=L"\textrm{Flowpipe}")
+
+    # solucion analitica
+    tdomasol_zoom = range(tZoomDispLeft, tZoomDispRight, length=103)
+
+    @time asol_VelTwoThirds_zoom, asol_VelTwoThirds_zoom = _sol_analitica_clamped(PosTwoThirds, tdomasol_zoom, 1000);
+
+    plot!(fig, tdomasol_zoom, asol_VelTwoThirds_zoom, c=:magenta, lw=1.5, lab=L"\textrm{Analytic (PDE)}")
+
+    paso = 8
+
+    ai = idxtleft
+    bi = idxtright
+
+    # == Newmark ==
+    # continua sin markers
+    plot!(fig, tdom[ai:bi], uNewmark_VelTwoThirds[ai:bi], seriestype=:path, marker=:none, lab="", color=:red, lw=2.0)
+
+    # con markers pero salteados
+    plot!(fig, tdom[ai:paso:bi], uNewmark_VelTwoThirds[ai:paso:bi], linetype=:scatter, marker=:circle, markersize=5, lab=L"\textrm{Newmark}", color=:red)
+
+    # == Bathe ==
+    # continua sin markers
+    plot!(fig, tdom[ai:bi], uBathe_VelTwoThirds[ai:bi], seriestype=:path, marker=:none, lab="", color=:green, lw=2.0)
+
+    # con markers pero salteados
+    plot!(fig, tdom[ai:paso:bi], uBathe_VelTwoThirds[ai:paso:bi], linetype=:scatter, marker=:utriangle, markersize=5, lab=L"\textrm{Bathe}", color=:green)
+
+    # == Analytic ODE ==
+    plot!(fig, sol_nobloating, vars=(0, VelTwoThirds), seriestype=:path, marker=:none, lw = 1.5, alpha=1, c=:blue, lab=L"\textrm{Analytic (ODE)}")
+    plot!(fig, sol_nobloating[ai:paso:bi], vars=(0, VelTwoThirds), linetype=:scatter, marker=:square, markersize=5,  c=:blue, lab="")
+
+end
+
+fig = plot_velocity_zoom()
+savefig(fig, joinpath(TARGET_FOLDER, "v_node700_zoom.pdf"))

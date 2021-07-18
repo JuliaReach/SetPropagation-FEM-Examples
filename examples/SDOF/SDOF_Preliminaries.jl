@@ -2,6 +2,8 @@ include("SDOF_Model.jl")
 
 using Plots, Plots.PlotMeasures, LaTeXStrings
 
+(@isdefined TARGET_FOLDER) ? nothing : TARGET_FOLDER = ""
+
 # ## Setup
 
 p = sdof()
@@ -9,9 +11,9 @@ p = sdof()
 prob = IVP(p)
 q = InitialValueProblem_quad(p)
 
-@show x0 = initial_state(prob)
+x0 = initial_state(prob)
 
-@show T = period(p)
+T = period(p)
 
 tmax = 4.0
 dom = 0:0.001:tmax
@@ -35,14 +37,13 @@ COLOR_zono = :chartreuse;
 model = StepIntersect(setops=:concrete)
 
 α = 0.05
-@show δ = α*T
+δ = α*T
 
-@show x0
 probn = normalize(prob)
 probd = discretize(probn, δ, model)
 
 Φ = state_matrix(probd)
-@show Ω0 = initial_state(probd);
+Ω0 = initial_state(probd);
 
 
 function plot_singleton_discretization()
@@ -88,7 +89,7 @@ function plot_singleton_discretization()
 end
 
 fig = plot_singleton_discretization()
-savefig(fig, "sdof_singleton_discretization.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof_singleton_discretization.pdf"))
 
 # ### Flowpipe
 
@@ -146,7 +147,7 @@ function plot_singleton_flowpipe()
 end
 
 fig = plot_singleton_flowpipe()
-savefig(fig, "sdof_singleton_flowpipe.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof_singleton_flowpipe.pdf"))
 
 # ## Distributed initial conditions
 
@@ -161,7 +162,7 @@ X0 = Hyperrectangle(low=[0.9, -0.1], high=[1.1, 0.1])
 
 probset = IVP(prob.s, X0);
 
-@show T = period(p)
+T = period(p)
 
 tmax = 4.0
 dom = 0:0.001:tmax
@@ -231,7 +232,7 @@ function plot_distributed_discretization()
 end
 
 fig = plot_distributed_discretization()
-savefig(fig, "sdof_distributed_discretization.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof_distributed_discretization.pdf"))
 
 # ### Flowpipe
 
@@ -297,4 +298,4 @@ function plot_distributed_flowpipe()
 end
 
 fig = plot_distributed_flowpipe()
-savefig(fig, "sdof_distributed_flowpipe.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof_distributed_flowpipe.pdf"))

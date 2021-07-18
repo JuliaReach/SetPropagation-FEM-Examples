@@ -3,20 +3,13 @@
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/examples/Heat3D.ipynb)
 #
 
-using ReachabilityAnalysis
-using StructuralDynamicsODESolvers
-using MAT
-using LinearAlgebra
-using SparseArrays
-using LazySets
+using ReachabilityAnalysis, StructuralDynamicsODESolvers, MAT
+using LinearAlgebra, SparseArrays
 
-const RA = ReachabilityAnalysis
-const IA = IntervalArithmetic
+(@isdefined TARGET_FOLDER) ? nothing : TARGET_FOLDER = ""
 
 # load internal (non-exported) functions
 using ReachabilityAnalysis: ReachSolution, discretize, normalize, solve, center, step_size
-
-using SetPropagation_FEM_Examples: @modelpath
 
 # reduce default tolerance for vertex enumeration
 LazySets.set_ztol(Float64, 1e-12)
@@ -25,7 +18,7 @@ using Plots
 using Plots.PlotMeasures
 using LaTeXStrings
 
-function load_heat3d_matrices(; path=joinpath(@modelpath("Heat3D", "Heat3D.mat")))
+function load_heat3d_matrices(; path=joinpath(@__DIR__, "Heat3D.mat"))
     vars = matread(path)
 
     K = vars["K"]
@@ -40,7 +33,7 @@ function load_heat3d_matrices(; path=joinpath(@modelpath("Heat3D", "Heat3D.mat")
     return K, C, qextTamb, QhG, timeIncr
 end
 
-function load_heat3d_params(; path=joinpath(@modelpath("Heat3D", "params.mat")))
+function load_heat3d_params(; path=joinpath(@__DIR__, "params.mat"))
     vars       = matread(path)
     rho        = vars["rho"]
     m          = vars["m"]
@@ -56,7 +49,7 @@ function load_heat3d_params(; path=joinpath(@modelpath("Heat3D", "params.mat")))
     return rho, QFHmin, QFHmax, m, Tini, Tambmin, Tambvarmin, Tambvarmax, Tambvar, QFH
 end
 
-function load_heat3d_octaveSols(; path=joinpath(@modelpath("Heat3D", "solsOctave.mat")))
+function load_heat3d_octaveSols(; path=joinpath(@__DIR__, "solsOctave.mat"))
     vars = matread(path)
     solAOctave = vars["Ts3DA"]
     solBOctave = vars["Ts3DB"]
@@ -139,7 +132,7 @@ function flowpipe_snapshot(sol, t)
 end
 
 # cartesian product array of intervals
-function _flowpipe_snapshot(X::ReachSet{N, CartesianProductArray{N, Interval{N, IA.Interval{N}}}}) where {N}
+function _flowpipe_snapshot(X::ReachSet{N, CartesianProductArray{N, Interval{N, IntervalArithmetic.Interval{N}}}}) where {N}
     n = dim(X)
     xs = range(0, 1, length=n+2)
 
@@ -389,7 +382,7 @@ lens!(fig, [50, 52], [83.3, 84.5], inset = (1, bbox(0.7, 0.1, 0.2, 0.2)),
            yticks=([83.5, 84.0, 84.5], [ L"83.5", "", L"84.5"])
 )
 
-savefig(fig, "heat3d_Case1.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "heat3d_Case1.pdf"))
 
 #-----------------------------------------------------------
 # Plots Case 2
@@ -415,4 +408,4 @@ plot!(fig,  solRFEMCase2, vars=(0, controlNodeB), alpha=.2, lc=:blue, c=:blue, l
 plot!(fig, tdom, solnodeSDCase1(controlNodeA), lc=:red, lab=L"\textrm{Backward Euler at A}" )
 plot!(fig, tdom, solnodeSDCase1(controlNodeB), lc=:blue, lab=L"\textrm{Backward Euler at B}")
 
-savefig(fig,"heat3d_Case2.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "heat3d_Case2.pdf"))

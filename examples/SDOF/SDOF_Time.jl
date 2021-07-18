@@ -1,7 +1,8 @@
 using Plots, Plots.PlotMeasures, LaTeXStrings
-using StructuralDynamicsODESolvers
 
 include("SDOF_Model.jl")
+
+(@isdefined TARGET_FOLDER) ? nothing : TARGET_FOLDER = ""
 
 p = sdof()
 prob = IVP(p)
@@ -99,17 +100,17 @@ end
 # ==========================
 
 fig = plot_x_vs_t(0.05)
-savefig(fig, "sdof5a.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof5a.pdf"))
 
 fig = plot_x_vs_t_zoom(0.05)
-savefig(fig, "sdof5b.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof5b.pdf"))
 
 # ==========================
 # Figures for α = 0.1
 # ==========================
 
 fig = plot_x_vs_t(0.1)
-savefig(fig, "sdof6a.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof6a.pdf"))
 
 fig = plot_x_vs_t_zoom(0.1)
-savefig(fig, "sdof6b.pdf")
+savefig(fig, joinpath(TARGET_FOLDER, "sdof6b.pdf"))

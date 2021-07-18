@@ -1,5 +1,6 @@
-using ReachabilityAnalysis
-using StructuralDynamicsODESolvers
+using ReachabilityAnalysis, StructuralDynamicsODESolvers
+
+(@isdefined TARGET_FOLDER) ? nothing : TARGET_FOLDER = ""
 
 # returns A = -inv(C) * K
 function load_heat1d(; file="heat1d_99.mat")

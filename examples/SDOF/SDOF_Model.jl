@@ -133,7 +133,7 @@ function AD_numerica(xb, N, npers)
     return (1-(maximum(xb[end-ts_barrido:end]))^(1/(Int(npers)-N)))*100;
 end
 
-function _compute_AD(T, N, numpers, α)
+function compute_amplitude_decay(T, N, numpers, α)
     tf = numpers*T
     conjs = period_evolution2(T, tf, α)
 
@@ -150,7 +150,7 @@ function _compute_AD(T, N, numpers, α)
     return amps_min_num
 end
 
-function _compute_PE(T, N, numpers, α)
+function compute_period_elongation(T, N, numpers, α)
 
     tf = numpers*T
 
