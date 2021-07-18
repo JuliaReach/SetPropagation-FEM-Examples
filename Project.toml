@@ -1,8 +1,6 @@
 name = "SetPropagation_FEM_Examples"
 uuid = "4abb1162-9935-42bc-9788-8314dfa4607d"
-authors = ["mforets <mforets@gmail.com>",
-           "dfcaporale <dfcaporale@gmail.com>",
-           "jorgepz <jorgepz@fing.edu.uy>"]
+authors = ["mforets <mforets@gmail.com>", "dfcaporale <dfcaporale@gmail.com>", "jorgepz <jorgepz@fing.edu.uy>"]
 version = "0.1.0"
 
 [deps]

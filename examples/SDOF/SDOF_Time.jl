@@ -1,9 +1,7 @@
 using Plots, Plots.PlotMeasures, LaTeXStrings
 using StructuralDynamicsODESolvers
-const SD = StructuralDynamicsODESolvers
-using ReachabilityAnalysis: solve
 
-include("SDOF.jl")
+include("SDOF_Model.jl")
 
 p = sdof()
 prob = IVP(p)
@@ -18,7 +16,7 @@ f(α; alg=VREP(δ=α*T, approx_model=StepIntersect(setops=:concrete))) = solve(p
 # solution using numerical scheme
 q = InitialValueProblem_quad(p)
 
-g(α; alg=Newmark(Δt=α*T, α=0.25, δ=0.5)) = SD.solve(q, alg, NSTEPS=round(Int, tmax / (α*T)));
+g(α; alg=Newmark(Δt=α*T, α=0.25, δ=0.5)) = solve(q, alg, NSTEPS=round(Int, tmax / (α*T)));
 
 function plot_x_vs_t(α)
     fig = plot(xlab=L"t", ylab=L"u(t)",
@@ -96,9 +94,8 @@ function plot_x_vs_t_zoom(α)
     fig
 end
 
-
 # ==========================
-# Figuras para α = 0.05
+# Figures for α = 0.05
 # ==========================
 
 fig = plot_x_vs_t(0.05)
@@ -108,7 +105,7 @@ fig = plot_x_vs_t_zoom(0.05)
 savefig(fig, "sdof5b.pdf")
 
 # ==========================
-# Figuras para α = 0.1
+# Figures for α = 0.1
 # ==========================
 
 fig = plot_x_vs_t(0.1)

@@ -1,26 +1,29 @@
-using ReachabilityAnalysis, Plots, Statistics
-using LaTeXStrings
-using Plots.PlotMeasures
+using Plots, LaTeXStrings, Plots.PlotMeasures, Statistics
 using MAT
 
-include("SDOF.jl")
+include("SDOF_Model.jl")
 
-vars = matread("calculos_octave_PE_AD.mat");
-α       = vars["alphas"]';
-N       = vars["N"]'; # numero de periodos usados para el calculo
-numpers = vars["npers"]'; # numero de periodos de la senal
-AD_Bathe_teo_octave   = vars["AD_Bathe_teo"];
-AD_Bathe_num_octave   = vars["AD_Bathe_num"];
-AD_Newmark_teo_octave = vars["AD_Newmark_teo"];
-AD_Newmark_num_octave = vars["AD_Newmark_num"];
-PE_Bathe_octave       = vars["vectorPETsOctave_Bathe"];
-PE_Newmark_octave     = vars["vectorPETsOctave_Newmark"];
-PE_Bathe_teo_octave   = vars["PE_Bathe_teo"];
-PE_Newmark_teo_octave = vars["PE_Newmark_teo"];
+## Load data
 
-T = 1/2;
-PE_RFEM_inf, PE_RFEM_sup = _compute_PE(T, N, numpers, α);
-AD_RFEM_inf = _compute_AD(T, N, numpers, α);
+vars = matread("PE_AD_numerical.mat")
+
+α                     = vars["alphas"]'
+N                     = vars["N"]'               # number of periods used in the computation
+numpers               = vars["npers"]'           # number of periods of the signal
+AD_Bathe_teo_octave   = vars["AD_Bathe_teo"]
+AD_Bathe_num_octave   = vars["AD_Bathe_num"]
+AD_Newmark_teo_octave = vars["AD_Newmark_teo"]
+AD_Newmark_num_octave = vars["AD_Newmark_num"]
+PE_Bathe_octave       = vars["vectorPETsOctave_Bathe"]
+PE_Newmark_octave     = vars["vectorPETsOctave_Newmark"]
+PE_Bathe_teo_octave   = vars["PE_Bathe_teo"]
+PE_Newmark_teo_octave = vars["PE_Newmark_teo"]
+
+T = 1/2
+PE_RFEM_inf, PE_RFEM_sup = _compute_PE(T, N, numpers, α)
+AD_RFEM_inf = _compute_AD(T, N, numpers, α)
+
+## Period elongation
 
 function _plot_PE()
     fig = plot(xlab=L"\alpha", ylab=L"\% PE", legend=:topleft,
@@ -41,6 +44,8 @@ end
 
 fig = _plot_PE()
 savefig(fig, "PE_all.pdf")
+
+## Amplitude decay
 
 function _plot_AD()
     fig = plot(xlab=L"\alpha", ylab=L"\% AD", legend=:topleft,
