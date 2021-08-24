@@ -24,7 +24,7 @@ The Finite Element Method (FEM) is the gold standard for spatial discretization 
 
 ## How to run this package
 
-This package requires [Julia](http://julialang.org/). Run the script `runall.jl` to execute all benchmarks:
+This package requires [Julia](http://julialang.org/). Once installed, run the script `runall.jl` to execute all benchmarks:
 
 ```julia
 $ julia runall.jl
