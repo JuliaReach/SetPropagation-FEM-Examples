@@ -32,4 +32,4 @@ $ julia runall.jl
 If the execution is successful, a folder `output` will be created, with subfolders
 containing the figures for each model.
 
-All the figures appearing in the article can be found in the folder [fig](https://github.com/JuliaReach/SetPropagation-FEM-Examples/tree/main/fig).
+For reference, all the figures appearing in the article can be found in the folder [fig](https://github.com/JuliaReach/SetPropagation-FEM-Examples/tree/main/fig).
