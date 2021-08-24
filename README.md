@@ -2,9 +2,9 @@
 
 This repository contains the repeatibility evaluation for the article **Combining Set Propagation with Finite Element Methods for Time Integration in Transient Solid Mechanics Problems** by
 
-- **Marcelo Forets** ([@mforets](http://github.com/mforets) from Departamento de Matemática y Aplicaciones, Centro Universitario Regional del Este, Universidad de la República, Maldonado, Uruguay,
-- **Daniel Freire Caporale** ([@dfcaporale](http://github.com/dfcaporale)) from Instituto de Fı́sica, Facultad de Ciencias, Universidad de la República, Montevideo, Uruguay), and
-- **Jorge M. Pérez Zerpa** ([@jorgepz](http://github.com/jorgepz)) from Instituto de Estructuras y Transporte, Facultad de Ingenierı́a, Universidad de la República, Montevideo, Uruguay.
+- **Marcelo Forets** ([@mforets](http://github.com/mforets)), Departamento de Matemática y Aplicaciones, Centro Universitario Regional del Este, Universidad de la República, Maldonado, Uruguay,
+- **Daniel Freire Caporale** ([@dfcaporale](http://github.com/dfcaporale)), Instituto de Fı́sica, Facultad de Ciencias, Universidad de la República, Montevideo, Uruguay), and
+- **Jorge M. Pérez Zerpa** ([@jorgepz](http://github.com/jorgepz)), Instituto de Estructuras y Transporte, Facultad de Ingenierı́a, Universidad de la República, Montevideo, Uruguay.
 
 The arXiv pre-print can be found here: [arXiv:2105.05841](https://arxiv.org/abs/2105.05841) (2021).
 
