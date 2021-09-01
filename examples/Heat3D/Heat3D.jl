@@ -13,7 +13,7 @@ using FastExpm
 # load internal (non-exported) functions
 using ReachabilityAnalysis: ReachSolution, discretize, normalize, solve, center, step_size
 
-include("/home/mforets/Projects/paper_rfem/examples/krylov_concept.jl")
+include("../krylov_concept.jl")
 
 # reduce default tolerance for vertex enumeration
 LazySets.set_ztol(Float64, 1e-12)

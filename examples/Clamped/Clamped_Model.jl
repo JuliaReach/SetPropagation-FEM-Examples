@@ -10,7 +10,7 @@ using ReachabilityAnalysis, LinearAlgebra, LazySets, SparseArrays
 using StructuralDynamicsODESolvers
 using LazySets.Arrays
 
-include("/home/mforets/Projects/paper_rfem/examples/krylov_concept.jl")
+include("../krylov_concept.jl")
 using FastExpm
 
 LazySets.set_ztol(Float64, 1e-15)
