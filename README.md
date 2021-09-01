@@ -2,9 +2,9 @@
 
 This repository contains the repeatibility evaluation for the article **Combining Set Propagation with Finite Element Methods for Time Integration in Transient Solid Mechanics Problems** by
 
-- **Marcelo Forets** ([@mforets](http://github.com/mforets) from Departamento de Matemática y Aplicaciones, Centro Universitario Regional del Este, Universidad de la República, Maldonado, Uruguay,
-- **Daniel Freire Caporale** ([@dfcaporale](http://github.com/dfcaporale)) from Instituto de Fı́sica, Facultad de Ciencias, Universidad de la República, Montevideo, Uruguay), and
-- **Jorge M. Pérez Zerpa** ([@jorgepz](http://github.com/jorgepz)) from Instituto de Estructuras y Transporte, Facultad de Ingenierı́a, Universidad de la República, Montevideo, Uruguay.
+- **Marcelo Forets** ([@mforets](http://github.com/mforets)), Departamento de Matemática y Aplicaciones, Centro Universitario Regional del Este, Universidad de la República, Maldonado, Uruguay,
+- **Daniel Freire Caporale** ([@dfcaporale](http://github.com/dfcaporale)), Instituto de Fı́sica, Facultad de Ciencias, Universidad de la República, Montevideo, Uruguay), and
+- **Jorge M. Pérez Zerpa** ([@jorgepz](http://github.com/jorgepz)), Instituto de Estructuras y Transporte, Facultad de Ingenierı́a, Universidad de la República, Montevideo, Uruguay.
 
 The arXiv pre-print can be found here: [arXiv:2105.05841](https://arxiv.org/abs/2105.05841) (2021).
 
@@ -24,7 +24,7 @@ The Finite Element Method (FEM) is the gold standard for spatial discretization 
 
 ## How to run this package
 
-Run the script `runall.jl` to execute all benchmarks:
+This package requires [Julia](http://julialang.org/). Once installed, run the script `runall.jl` to execute all benchmarks:
 
 ```julia
 $ julia runall.jl
@@ -32,4 +32,4 @@ $ julia runall.jl
 If the execution is successful, a folder `output` will be created, with subfolders
 containing the figures for each model.
 
-All the figures appearing in the article can be found in the folder [fig](https://github.com/JuliaReach/SetPropagation-FEM-Examples/tree/main/fig).
+For reference, all the figures appearing in the article can be found in the folder [fig](https://github.com/JuliaReach/SetPropagation-FEM-Examples/tree/main/fig).
