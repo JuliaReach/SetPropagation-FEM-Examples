@@ -1,6 +1,7 @@
 # # Single degree-of-freedom
 
 using ReachabilityAnalysis, StructuralDynamicsODESolvers
+using ReachabilityAnalysis:discretize
 
 # ### Equations of motion
 
