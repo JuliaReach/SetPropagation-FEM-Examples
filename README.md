@@ -34,7 +34,7 @@ $ julia runall.jl
 If the execution is successful, a folder `output` will be created, with subfolders
 containing the figures for each model.
 
-The Lambs wave propagation problem (problem 3) is not run by default. Use the flag `LONG` to run it, as in `$ julia runall.jl LONG`. It may take several hours.
+The Lambs wave propagation problem (problem 3) is not run by default. Pass the flag `LONG` to run that model as well, as in `julia runall.jl LONG`. It may take several hours.
 
 *Note.* For reference, all the figures appearing in the article can be found in the folder [fig](https://github.com/JuliaReach/SetPropagation-FEM-Examples/tree/main/fig).
 
