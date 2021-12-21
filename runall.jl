@@ -1,10 +1,12 @@
 # instantiate project
-#import Pkg
-#Pkg.activate(@__DIR__)
-#Pkg.instantiate()
+import Pkg
+Pkg.activate(@__DIR__)
+Pkg.instantiate()
 
 const OUTPUT_FOLDER = "output"
 const RESULTS_FILE = "runtimes.csv"
+
+LONG = length(ARGS) == 1 && ARGS[1] ∈ ("LONG", "long")
 
 function main()
 
@@ -41,9 +43,11 @@ function main()
     # --------------------------
     # Lambs Wave
     # --------------------------
-    TARGET_FOLDER = joinpath(OUTPUT_FOLDER, "LambsWave")
-    println("\n (3/5) Running Lambs wave propagation problem...\n")
-    include(joinpath("examples", "LambsWave", "lambs_results.jl"))
+    if LONG
+        TARGET_FOLDER = joinpath(OUTPUT_FOLDER, "LambsWave")
+        println("\n (3/5) Running Lambs wave propagation problem...\n")
+        include(joinpath("examples", "LambsWave", "lambs_results.jl"))
+    end
 
     # --------------------------
     # Heat 1D

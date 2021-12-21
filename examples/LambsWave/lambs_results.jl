@@ -1,6 +1,5 @@
 using Plots
 using Colors
-using Revise
 using Statistics
 using MAT
 import Random
